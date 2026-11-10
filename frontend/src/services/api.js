@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+const apiBaseUrl = configuredApiBaseUrl.endsWith('/api')
+  ? configuredApiBaseUrl
+  : `${configuredApiBaseUrl}/api`;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -52,6 +57,19 @@ export const profileAPI = {
   uploadResume: (formData) => api.post('/profile/resume', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  downloadResume: async (filename, originalName) => {
+    const blob = await api.get(`/profile/resume/download/${encodeURIComponent(filename)}`, {
+      responseType: 'blob'
+    });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = originalName || filename;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  },
   deleteResume: () => api.delete('/profile/resume'),
   getCandidateProfile: (id) => api.get(`/profile/candidate/${id}`)
 };

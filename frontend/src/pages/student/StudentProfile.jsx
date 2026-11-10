@@ -165,6 +165,19 @@ export const StudentProfile = () => {
     }
   };
 
+  const handleResumeDownload = async () => {
+    try {
+      setError('');
+      const filename = profile.resume?.url?.split('/').pop();
+      if (!filename) {
+        throw new Error('Resume file is unavailable.');
+      }
+      await profileAPI.downloadResume(filename, profile.resume.originalName);
+    } catch (err) {
+      setError(err.message || 'Failed to download resume');
+    }
+  };
+
   if (loading || !profile) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
@@ -344,15 +357,14 @@ export const StudentProfile = () => {
               </div>
 
               <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                <a
-                  href={`/api/profile/resume/download/${profile.resume.url.split('/').pop()}`}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={handleResumeDownload}
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-dark-surface border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-dark-surface/80 flex items-center space-x-1"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download</span>
-                </a>
+                </button>
                 <button
                   type="button"
                   onClick={handleDeleteResume}

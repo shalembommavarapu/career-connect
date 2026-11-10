@@ -4,6 +4,21 @@ import User from '../models/User.js';
 import Application from '../models/Application.js';
 import { USER_ROLES } from '../config/constants.js';
 
+const deleteResumeIfUnused = async (resumeUrl) => {
+  if (!resumeUrl || await Application.exists({ resumeUrl })) {
+    return;
+  }
+
+  const filePath = path.resolve('uploads', 'resumes', path.basename(resumeUrl));
+  try {
+    await fs.promises.unlink(filePath);
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+};
+
 /**
  * @route   GET /api/profile
  * @desc    Get logged in user profile with calculated completion
@@ -143,13 +158,7 @@ export const uploadResumeFile = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Delete old resume file from disk if exists
-    if (user.resume?.url) {
-      const oldPath = path.resolve('uploads', 'resumes', path.basename(user.resume.url));
-      if (fs.existsSync(oldPath)) {
-        fs.unlink(oldPath, () => {});
-      }
-    }
+    await deleteResumeIfUnused(user.resume?.url);
 
     const resumeUrl = `/uploads/resumes/${req.file.filename}`;
 
@@ -186,12 +195,7 @@ export const deleteResumeFile = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (user.resume?.url) {
-      const oldPath = path.resolve('uploads', 'resumes', path.basename(user.resume.url));
-      if (fs.existsSync(oldPath)) {
-        fs.unlink(oldPath, () => {});
-      }
-    }
+    await deleteResumeIfUnused(user.resume?.url);
 
     user.resume = undefined;
     await user.save();
@@ -229,7 +233,7 @@ export const downloadResume = async (req, res, next) => {
       // Verify student applied to one of recruiter's jobs
       const hasApplication = await Application.findOne({
         recruiterId: req.user._id,
-        resumeUrl: { $regex: filename, $options: 'i' }
+        resumeUrl: `/uploads/resumes/${filename}`
       });
 
       if (!hasApplication && req.user.role !== USER_ROLES.ADMIN) {

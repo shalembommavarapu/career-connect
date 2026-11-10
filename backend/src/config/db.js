@@ -16,6 +16,10 @@ if (systemBinary) {
 }
 
 export const connectDB = async () => {
+  if (process.env.NODE_ENV === "production" && !process.env.MONGODB_URI) {
+    throw new Error("MONGODB_URI must be configured in production.");
+  }
+
   const uri =
     process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/careerconnect";
 
@@ -27,6 +31,10 @@ export const connectDB = async () => {
     console.log("[DB] MongoDB Connected:", conn.connection.host);
     return conn;
   } catch (primaryErr) {
+    if (process.env.NODE_ENV === "production") {
+      throw primaryErr;
+    }
+
     console.warn("[DB] MongoDB connection failed. Starting memory server...");
 
     try {

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import validator from 'validator';
 import { USER_ROLES } from '../config/constants.js';
 
 const educationSchema = new mongoose.Schema({
@@ -39,10 +40,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
-    match: [
-      /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-      'Please provide a valid email address'
-    ]
+    validate: [validator.isEmail, 'Please provide a valid email address']
   },
   passwordHash: {
     type: String,

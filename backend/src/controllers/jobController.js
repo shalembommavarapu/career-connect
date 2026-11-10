@@ -173,6 +173,14 @@ export const getJobById = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Job opportunity not found' });
     }
 
+    const mayViewInactiveJob = req.user && (
+      req.user.role === USER_ROLES.ADMIN ||
+      job.recruiterId?.toString() === req.user._id.toString()
+    );
+    if (job.status !== JOB_STATUS.ACTIVE && !mayViewInactiveJob) {
+      return res.status(404).json({ success: false, message: 'Job opportunity not found' });
+    }
+
     // Increment view count asynchronously
     Job.findByIdAndUpdate(job._id, { $inc: { viewsCount: 1 } }).exec();
 

@@ -2,12 +2,13 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { USER_ROLES } from '../config/constants.js';
+import { getJwtSecret } from '../config/jwt.js';
 
 // Generate signed JWT
 const generateToken = (userId, role) => {
   return jwt.sign(
     { id: userId, role },
-    process.env.JWT_SECRET || 'careerconnect_secret_jwt_key_2026_production_grade',
+    getJwtSecret(),
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 };
@@ -161,7 +162,7 @@ export const updatePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    if (!newPassword || newPassword.length < 6) {
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
       return res.status(400).json({
         success: false,
         message: 'New password must be at least 6 characters long'
@@ -169,6 +170,20 @@ export const updatePassword = async (req, res, next) => {
     }
 
     const user = await User.findById(req.user._id).select('+passwordHash');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User profile not found'
+      });
+    }
+
+    if (typeof currentPassword !== 'string' || !currentPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password is required'
+      });
+    }
+
     const isMatch = await user.matchPassword(currentPassword);
     if (!isMatch) {
       return res.status(400).json({

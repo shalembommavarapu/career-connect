@@ -20,6 +20,8 @@ import { SearchBar } from '../components/SearchBar';
 import { JobCard } from '../components/JobCard';
 import { InternshipCard } from '../components/InternshipCard';
 import { JobCardSkeleton } from '../components/LoadingSkeleton';
+import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
 import { jobAPI } from '../services/api';
 
 const POPULAR_CATEGORIES = [
@@ -44,11 +46,13 @@ export const HomePage = () => {
   const [jobs, setJobs] = useState([]);
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError('');
         const [jobsRes, internsRes] = await Promise.all([
           jobAPI.getJobs({ isInternship: false, limit: 6 }),
           jobAPI.getJobs({ isInternship: true, limit: 6 })
@@ -57,7 +61,7 @@ export const HomePage = () => {
         if (jobsRes.success) setJobs(jobsRes.jobs || []);
         if (internsRes.success) setInternships(internsRes.jobs || []);
       } catch (err) {
-        console.error('Failed to load homepage opportunities:', err);
+        setError(err.message || 'Failed to load featured opportunities.');
       } finally {
         setLoading(false);
       }
@@ -205,20 +209,30 @@ export const HomePage = () => {
               <JobCardSkeleton key={idx} />
             ))}
           </div>
+        ) : error ? (
+          <ErrorState message={error} onRetry={() => window.location.reload()} />
         ) : (
           <>
             {activeTab === 'jobs' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {jobs.map((job) => (
-                  <JobCard key={job._id} job={job} />
-                ))}
-              </div>
+              jobs.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {jobs.map((job) => (
+                    <JobCard key={job._id} job={job} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState title="No jobs available yet" description="New opportunities will appear here as employers post openings." />
+              )
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {internships.map((internship) => (
-                  <InternshipCard key={internship._id} internship={internship} />
-                ))}
-              </div>
+              internships.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {internships.map((internship) => (
+                    <InternshipCard key={internship._id} internship={internship} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState title="No internships available yet" description="New internships will appear here as employers post openings." />
+              )
             )}
           </>
         )}

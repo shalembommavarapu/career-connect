@@ -25,19 +25,18 @@ app.use(helmet({
 
 // CORS Configuration
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173',
-  process.env.CLIENT_URL
+  process.env.CLIENT_URL?.replace(/\/+$/, ''),
+  ...(process.env.NODE_ENV === 'production'
+    ? []
+    : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'])
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps, curl, or Postman)
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+    if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(null, true);
+    return callback(new Error(`Origin ${origin} is not allowed by CORS`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -68,9 +67,9 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Serve uploads statically
-const uploadsDir = path.resolve('uploads');
-app.use('/uploads', express.static(uploadsDir));
+// Only public avatar assets are served statically; resumes require authorization.
+const avatarsDir = path.resolve('uploads', 'avatars');
+app.use('/uploads/avatars', express.static(avatarsDir));
 
 // System Health Endpoint
 app.get('/api/health', (req, res) => {

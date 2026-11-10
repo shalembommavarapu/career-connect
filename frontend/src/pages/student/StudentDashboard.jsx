@@ -24,6 +24,7 @@ import {
 import { DashboardStatCard } from '../../components/DashboardStatCard';
 import { JobCard } from '../../components/JobCard';
 import { ApplicationStatusBadge } from '../../components/ApplicationStatusBadge';
+import { ErrorState } from '../../components/ErrorState';
 import { applicationAPI, savedJobAPI, jobAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -33,11 +34,13 @@ export const StudentDashboard = () => {
   const [savedJobs, setSavedJobs] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        setError('');
         const [appsRes, savedRes, recsRes] = await Promise.all([
           applicationAPI.getMyApplications(),
           savedJobAPI.getSavedJobs(),
@@ -48,7 +51,7 @@ export const StudentDashboard = () => {
         if (savedRes.success) setSavedJobs(savedRes.savedJobs || []);
         if (recsRes.success) setRecommendations(recsRes.recommendations || []);
       } catch (err) {
-        console.error('Failed to load student dashboard:', err);
+        setError(err.message || 'Failed to load your dashboard.');
       } finally {
         setLoading(false);
       }
@@ -56,6 +59,14 @@ export const StudentDashboard = () => {
 
     fetchDashboardData();
   }, []);
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ErrorState message={error} onRetry={() => window.location.reload()} />
+      </div>
+    );
+  }
 
   // Compute live statistics
   const totalApps = applications.length;

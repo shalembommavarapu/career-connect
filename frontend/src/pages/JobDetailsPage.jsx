@@ -105,9 +105,7 @@ export const JobDetailsPage = () => {
 
       const res = await applicationAPI.apply({
         jobId: job._id,
-        coverLetter,
-        resumeUrl: user.resume.url,
-        resumeOriginalName: user.resume.originalName
+        coverLetter
       });
 
       if (res.success) {

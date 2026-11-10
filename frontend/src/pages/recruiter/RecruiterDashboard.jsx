@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { DashboardStatCard } from '../../components/DashboardStatCard';
 import { ApplicationStatusBadge } from '../../components/ApplicationStatusBadge';
+import { ErrorState } from '../../components/ErrorState';
 import { jobAPI, applicationAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -21,11 +22,13 @@ export const RecruiterDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError('');
         const [jobsRes, appsRes] = await Promise.all([
           jobAPI.getRecruiterJobs(),
           applicationAPI.getRecruiterApplications()
@@ -34,7 +37,7 @@ export const RecruiterDashboard = () => {
         if (jobsRes.success) setJobs(jobsRes.jobs || []);
         if (appsRes.success) setApplications(appsRes.applications || []);
       } catch (err) {
-        console.error(err);
+        setError(err.message || 'Failed to load your recruiter dashboard.');
       } finally {
         setLoading(false);
       }
@@ -42,6 +45,14 @@ export const RecruiterDashboard = () => {
 
     fetchData();
   }, []);
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ErrorState message={error} onRetry={() => window.location.reload()} />
+      </div>
+    );
+  }
 
   const activeJobsCount = jobs.filter(j => j.status === 'active').length;
   const totalApplicants = applications.length;

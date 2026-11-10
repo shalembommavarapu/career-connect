@@ -64,36 +64,37 @@ export const LoginPage = () => {
           </p>
         </div>
 
-        {/* Quick-fill demo credentials for testers */}
-        <div className="p-3.5 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200/50 dark:border-brand-900/40">
-          <div className="flex items-center space-x-1.5 text-xs font-bold text-brand-600 dark:text-brand-400 mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Quick-Fill Demo Credentials:</span>
+        {import.meta.env.DEV && (
+          <div className="p-3.5 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200/50 dark:border-brand-900/40">
+            <div className="flex items-center space-x-1.5 text-xs font-bold text-brand-600 dark:text-brand-400 mb-2">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Quick-Fill Demo Credentials:</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 text-[11px]">
+              <button
+                type="button"
+                onClick={() => handleQuickFill('student@demo.dev', 'Student@123')}
+                className="py-1.5 px-2 rounded-lg bg-white dark:bg-dark-card border border-brand-300 dark:border-brand-800 text-slate-800 dark:text-slate-200 font-semibold hover:bg-brand-100 dark:hover:bg-dark-surface transition-colors"
+              >
+                👨‍🎓 Student
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('marcus@stripe.dev', 'Recruiter@123')}
+                className="py-1.5 px-2 rounded-lg bg-white dark:bg-dark-card border border-brand-300 dark:border-brand-800 text-slate-800 dark:text-slate-200 font-semibold hover:bg-brand-100 dark:hover:bg-dark-surface transition-colors"
+              >
+                💼 Recruiter
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickFill('admin@careerconnect.dev', 'Admin@123')}
+                className="py-1.5 px-2 rounded-lg bg-white dark:bg-dark-card border border-brand-300 dark:border-brand-800 text-slate-800 dark:text-slate-200 font-semibold hover:bg-brand-100 dark:hover:bg-dark-surface transition-colors"
+              >
+                🛡️ Admin
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('student@demo.dev', 'Student@123')}
-              className="py-1.5 px-2 rounded-lg bg-white dark:bg-dark-card border border-brand-300 dark:border-brand-800 text-slate-800 dark:text-slate-200 font-semibold hover:bg-brand-100 dark:hover:bg-dark-surface transition-colors"
-            >
-              👨‍🎓 Student
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('marcus@stripe.dev', 'Recruiter@123')}
-              className="py-1.5 px-2 rounded-lg bg-white dark:bg-dark-card border border-brand-300 dark:border-brand-800 text-slate-800 dark:text-slate-200 font-semibold hover:bg-brand-100 dark:hover:bg-dark-surface transition-colors"
-            >
-              💼 Recruiter
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin@careerconnect.dev', 'Admin@123')}
-              className="py-1.5 px-2 rounded-lg bg-white dark:bg-dark-card border border-brand-300 dark:border-brand-800 text-slate-800 dark:text-slate-200 font-semibold hover:bg-brand-100 dark:hover:bg-dark-surface transition-colors"
-            >
-              🛡️ Admin
-            </button>
-          </div>
-        </div>
+        )}
 
         {error && (
           <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs border border-rose-200 dark:border-rose-900/50 flex items-center space-x-2">

@@ -11,7 +11,7 @@ export const errorHandler = (err, req, res, next) => {
   // Mongoose duplicate key
   if (err.code === 11000) {
     statusCode = 400;
-    const field = Object.keys(err.keyValue)[0];
+    const field = Object.keys(err.keyValue || {})[0] || 'email';
     message = `An account with this ${field} already exists.`;
   }
 
@@ -32,6 +32,18 @@ export const errorHandler = (err, req, res, next) => {
     statusCode = 400;
     if (err.code === 'LIMIT_FILE_SIZE') {
       message = 'File size limit exceeded. Maximum file size allowed is 5 MB.';
+    }
+  }
+
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    statusCode = 400;
+    message = 'Request body contains invalid JSON.';
+  }
+
+  if (statusCode >= 500) {
+    console.error(err);
+    if (process.env.NODE_ENV !== 'development') {
+      message = 'An unexpected server error occurred. Please try again later.';
     }
   }
 

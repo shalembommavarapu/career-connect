@@ -101,7 +101,7 @@ careerconnect/
 PORT=5000
 NODE_ENV=development
 MONGODB_URI=mongodb://127.0.0.1:27017/careerconnect
-JWT_SECRET=careerconnect_super_secret_jwt_key_2026_production_grade_freshers
+JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 ```
@@ -161,7 +161,7 @@ Open your browser at **`http://localhost:5173`**.
 
 ## 🔑 Demo & Test Credentials
 
-The database seeder provisions verified test accounts across all three platform roles:
+For local development only, the database seeder provisions test accounts across all three platform roles. Do not use these credentials in production; the seeder refuses non-local MongoDB hosts and production mode.
 
 | Role | Email | Password | Details |
 |---|---|---|---|
@@ -170,20 +170,21 @@ The database seeder provisions verified test accounts across all three platform 
 | **Recruiter 2** | `sarah.jenkins@google.dev` | `Recruiter@123` | Sarah Jenkins (Talent Acquisition Lead at Google Cloud) |
 | **Admin** | `admin@careerconnect.dev` | `Admin@123` | System Administrator (Full platform moderation access) |
 
-*(Quick-fill buttons are also available on the Login page for one-click demonstration).*
+*(Quick-fill buttons are available only in the Vite development build.)*
 
 ---
 
 ## 🧪 Automated REST API Testing
 
-An automated test script is included to verify all 15 core REST API routes end-to-end:
+Run the isolated backend integration suite from the repository root:
 
 ```bash
-cd backend
-npm run test:api
+npm run test:integration
 ```
 
-This verifies:
+The suite starts a disposable in-memory MongoDB instance, seeds only that instance, and verifies authentication, role checks, CORS, job and application workflows, recruiter ownership, and private resume downloads. Seed and test scripts reject production mode and non-local MongoDB URIs.
+
+The API suite covers:
 1. `GET /api/health` -> System health & uptime
 2. `POST /api/auth/login` -> Student authentication
 3. `POST /api/auth/login` -> Recruiter authentication
@@ -208,28 +209,26 @@ Import `careerconnect-api.postman_collection.json` into Postman. It contains pre
 
 ---
 
-## 🚢 Production Deployment Instructions
+## 🚢 Production Deployment on Render
 
-### Frontend (Vercel)
-1. Push repository to GitHub.
-2. Connect repository on **Vercel**.
-3. Set **Root Directory** to `frontend`.
-4. Configure Environment Variable:
-   - `VITE_API_BASE_URL`: `https://your-backend-domain.onrender.com/api`
-5. Click **Deploy**.
+Deploy the backend as a **Web Service** and the frontend as a **Static Site** from this repository.
 
-### Backend (Render / Railway)
-1. Create a **New Web Service** on Render.
-2. Set **Root Directory** to `backend`.
-3. Build Command: `npm install`
-4. Start Command: `npm start`
-5. Configure Environment Variables:
-   - `PORT`: `5000`
-   - `NODE_ENV`: `production`
-   - `MONGODB_URI`: `<Your MongoDB Atlas Connection String>`
-   - `JWT_SECRET`: `<Secure Random 64-character secret>`
-   - `CLIENT_URL`: `https://your-frontend-app.vercel.app`
-6. Click **Deploy**.
+### Backend Web Service
+1. Set **Root Directory** to `backend`.
+2. Set **Build Command** to `npm install` and **Start Command** to `npm start`.
+3. Configure `NODE_ENV=production`, `MONGODB_URI` with your MongoDB Atlas connection string, `JWT_SECRET` with a unique random secret, `JWT_EXPIRES_IN=7d`, and `CLIENT_URL` with the exact deployed frontend origin (for example, `https://your-frontend.onrender.com`).
+4. Do not set `PORT`; Render supplies it. The API health check is `/api/health`.
+
+### Frontend Static Site
+1. Set **Root Directory** to `frontend`.
+2. Set **Build Command** to `npm install && npm run build` and **Publish Directory** to `dist`.
+3. Set `VITE_API_BASE_URL` to the backend origin with `/api`, for example `https://your-backend.onrender.com/api`. If `/api` is accidentally omitted, the frontend appends it.
+4. Add a rewrite from `/*` to `/index.html` with action **Rewrite** so client-side routes work.
+5. Redeploy the backend after setting `CLIENT_URL` and redeploy the frontend after setting `VITE_API_BASE_URL`.
+
+Public authentication endpoints are `POST /api/auth/register` and `POST /api/auth/login`. The backend requires a real MongoDB connection in production; it will fail to start rather than use a temporary in-memory database.
+
+Resume files are private and are available only through the authenticated download endpoint. Configure durable storage for `backend/uploads` (a Render persistent disk mounted at the backend's uploads directory, or an external object store) before enabling resume uploads in production; the default container filesystem is ephemeral and uploaded files can be lost on redeploy or restart.
 
 ---
 
@@ -238,5 +237,6 @@ Import `careerconnect-api.postman_collection.json` into Postman. It contains pre
 - **Role Verification**: Server-side checks on all protected endpoints (`authMiddleware.js`).
 - **NoSQL Injection Sanitization**: Strips `$` and `.` operators from client request bodies.
 - **Strict Multer File Validation**: Only `.pdf`, `.doc`, and `.docx` mime-types allowed; 5 MB size cap; sanitized randomized file naming to prevent path traversal.
+- **Private Resume Access**: Resume files are excluded from public static hosting and downloads require authentication plus ownership or an application relationship.
 - **Rate Limiting**: Express rate limit on sensitive login and register endpoints.
 - **Secure Error Handling**: Stack traces suppressed in production mode.

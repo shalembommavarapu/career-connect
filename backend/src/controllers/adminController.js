@@ -2,6 +2,8 @@ import User from '../models/User.js';
 import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import AuditLog from '../models/AuditLog.js';
+import Notification from '../models/Notification.js';
+import SavedJob from '../models/SavedJob.js';
 import { USER_ROLES } from '../config/constants.js';
 
 /**
@@ -200,10 +202,29 @@ export const deleteUser = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    const recruiterJobIds = await Job.find({ recruiterId: targetUserId }).distinct('_id');
+
     await Promise.all([
       User.findByIdAndDelete(targetUserId),
-      Job.deleteMany({ recruiterId: targetUserId }),
-      Application.deleteMany({ studentId: targetUserId }),
+      Job.deleteMany({ _id: { $in: recruiterJobIds } }),
+      Application.deleteMany({
+        $or: [
+          { studentId: targetUserId },
+          { jobId: { $in: recruiterJobIds } }
+        ]
+      }),
+      SavedJob.deleteMany({
+        $or: [
+          { userId: targetUserId },
+          { jobId: { $in: recruiterJobIds } }
+        ]
+      }),
+      Notification.deleteMany({
+        $or: [
+          { recipientId: targetUserId },
+          { senderId: targetUserId }
+        ]
+      }),
       AuditLog.create({
         actorId: req.user._id,
         action: 'USER_DELETED',

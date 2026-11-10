@@ -11,7 +11,7 @@ import { APPLICATION_STATUS, USER_ROLES } from '../config/constants.js';
  */
 export const applyJob = async (req, res, next) => {
   try {
-    const { jobId, coverLetter, resumeUrl, resumeOriginalName } = req.body;
+    const { jobId, coverLetter } = req.body;
 
     if (!jobId) {
       return res.status(400).json({ success: false, message: 'Job ID is required' });
@@ -44,8 +44,8 @@ export const applyJob = async (req, res, next) => {
 
     // Determine resume
     const user = await User.findById(req.user._id);
-    const finalResumeUrl = resumeUrl || user.resume?.url;
-    const finalResumeName = resumeOriginalName || user.resume?.originalName || 'student_resume.pdf';
+    const finalResumeUrl = user.resume?.url;
+    const finalResumeName = user.resume?.originalName || 'student_resume.pdf';
 
     if (!finalResumeUrl) {
       return res.status(400).json({

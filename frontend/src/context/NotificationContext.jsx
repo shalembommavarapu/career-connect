@@ -24,7 +24,7 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount(res.unreadCount || 0);
       }
     } catch (err) {
-      // silently handle poll errors
+      console.error('Failed to refresh notifications:', err);
     } finally {
       setLoading(false);
     }

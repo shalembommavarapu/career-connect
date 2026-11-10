@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { getJwtSecret } from '../config/jwt.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -12,7 +13,7 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(
         token,
-        process.env.JWT_SECRET || 'careerconnect_secret_jwt_key_2026_production_grade'
+        getJwtSecret()
       );
 
       const user = await User.findById(decoded.id).select('-passwordHash');
@@ -34,10 +35,13 @@ export const protect = async (req, res, next) => {
       req.user = user;
       next();
     } catch (error) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid or expired authentication token. Please sign in again.'
-      });
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid or expired authentication token. Please sign in again.'
+        });
+      }
+      return next(error);
     }
   } else {
     return res.status(401).json({
@@ -54,16 +58,15 @@ export const optionalAuth = async (req, res, next) => {
   ) {
     try {
       const token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || 'careerconnect_secret_jwt_key_2026_production_grade'
-      );
+      const decoded = jwt.verify(token, getJwtSecret());
       const user = await User.findById(decoded.id).select('-passwordHash');
       if (user && user.status !== 'suspended') {
         req.user = user;
       }
-    } catch (e) {
-      // Ignore token verification failure for optional auth
+    } catch (error) {
+      if (error.name !== 'JsonWebTokenError' && error.name !== 'TokenExpiredError') {
+        return next(error);
+      }
     }
   }
   next();

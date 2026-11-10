@@ -15,9 +15,11 @@ import AuditLog from '../models/AuditLog.js';
 import { unstopAdapter } from '../services/externalJobService.js';
 import { connectDB, closeDB } from '../config/db.js';
 import { USER_ROLES, APPLICATION_STATUS, JOB_STATUS, LISTING_SOURCES } from '../config/constants.js';
+import { assertLocalDatabase } from './assertLocalDatabase.js';
 
 const seedDatabase = async () => {
   try {
+    assertLocalDatabase();
     console.log('🌱 Starting CareerConnect database seeding...');
     await connectDB();
 
@@ -426,13 +428,7 @@ const seedDatabase = async () => {
     });
 
     console.log('✅ CareerConnect database seeded successfully!');
-    console.log('--------------------------------------------------');
-    console.log('🔑 TEST CREDENTIALS:');
-    console.log('👨‍🎓 Student:   student@demo.dev         / Student@123');
-    console.log('💼 Recruiter: sarah.jenkins@google.dev / Recruiter@123');
-    console.log('💼 Recruiter: marcus@stripe.dev        / Recruiter@123');
-    console.log('🛡️ Admin:     admin@careerconnect.dev  / Admin@123');
-    console.log('--------------------------------------------------');
+    console.log('Demo accounts were created for local development.');
 
     await closeDB();
     process.exit(0);

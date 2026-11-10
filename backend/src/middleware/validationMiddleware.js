@@ -27,7 +27,7 @@ export const sanitizeData = (req, res, next) => {
  * Validate registration input
  */
 export const validateRegisterInput = (req, res, next) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, companyName } = req.body || {};
 
   if (!name || typeof name !== 'string' || name.trim().length < 2) {
     return res.status(400).json({
@@ -36,14 +36,14 @@ export const validateRegisterInput = (req, res, next) => {
     });
   }
 
-  if (!email || !validator.isEmail(email)) {
+  if (typeof email !== 'string' || !validator.isEmail(email)) {
     return res.status(400).json({
       success: false,
       message: 'Please provide a valid email address'
     });
   }
 
-  if (!password || password.length < 6) {
+  if (typeof password !== 'string' || password.length < 6) {
     return res.status(400).json({
       success: false,
       message: 'Password must be at least 6 characters long'
@@ -58,6 +58,20 @@ export const validateRegisterInput = (req, res, next) => {
     });
   }
 
+  if (role && role !== 'student' && role !== 'recruiter') {
+    return res.status(400).json({
+      success: false,
+      message: 'Role must be either student or recruiter'
+    });
+  }
+
+  if (role === 'recruiter' && (typeof companyName !== 'string' || companyName.trim().length < 2)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Company name is required and must be at least 2 characters long'
+    });
+  }
+
   next();
 };
 
@@ -65,16 +79,16 @@ export const validateRegisterInput = (req, res, next) => {
  * Validate login input
  */
 export const validateLoginInput = (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
 
-  if (!email || !validator.isEmail(email)) {
+  if (typeof email !== 'string' || !validator.isEmail(email)) {
     return res.status(400).json({
       success: false,
       message: 'Please provide a valid email address'
     });
   }
 
-  if (!password) {
+  if (typeof password !== 'string' || !password) {
     return res.status(400).json({
       success: false,
       message: 'Password is required'
